@@ -1,3 +1,4 @@
+# %%
 import dotenv
 import os
 import time
@@ -8,6 +9,14 @@ dotenv.load_dotenv()
 from FluidStack.client import FluidStack
 client = FluidStack(
     api_key = os.getenv('FLUIDSTACK_APIKEY')
+)
+
+def create_instances(names = ['james', 'mark', 'lena', 'jaime']):
+    for n in names:
+        client.instances.create(
+        name=f"{n}-a100",
+        gpu_type="A100_PCIE_80GB",
+        ssh_key=f"{n} key"
 )
 
 def print_all_status():
@@ -41,7 +50,20 @@ def try_stop(name, tries=60, secs=10):
             print(f"stopping {name}, {i}/{tries}")
         time.sleep(secs)
 
+# %%
 print_all_status()
 try_start('james-a100')
+print_all_status()
+
+# %%
+print_all_status()
 try_stop('james-a100')
 print_all_status()
+# %%
+create_instances()
+print_all_status()
+try_stop('james-a100')
+try_stop('mark-a100')
+try_stop('lena-a100')
+try_stop('jaime-a100')
+# %%
