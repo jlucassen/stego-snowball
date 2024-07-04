@@ -1,8 +1,7 @@
-# %%
 import dotenv
 import os
 import time
-import tqdm
+import argparse
 
 dotenv.load_dotenv()
 
@@ -11,20 +10,20 @@ client = FluidStack(
     api_key = os.getenv('FLUIDSTACK_APIKEY')
 )
 
-def create_instances(names = ['james', 'mark', 'lena', 'jaime']):
-    for n in names:
-        client.instances.create(
-        name=f"{n}-a100",
-        gpu_type="A100_PCIE_80GB",
-        ssh_key=f"{n} key"
-)
+def get_instance(name):
+    return [x for x in client.instances.list() if x.name.startswith(name)][0]
 
 def print_all_status():
     for instance in client.instances.list():
         print(f"{instance.name}: {instance.status}")
+        print(f"{instance.configuration}")
 
-def get_instance(name):
-    return [x for x in client.instances.list() if x.name == name][0]
+def create_instance(name):
+    client.instances.create(
+        name=f"{name}-a100",
+        gpu_type="A100_PCIE_80GB",
+        ssh_key=f"{name} key"
+)
 
 def try_start(name, tries=60, secs=10):
     instance = get_instance(name)
@@ -50,20 +49,17 @@ def try_stop(name, tries=60, secs=10):
             print(f"stopping {name}, {i}/{tries}")
         time.sleep(secs)
 
-# %%
-print_all_status()
-try_start('james-a100')
-print_all_status()
+def main():
+    parser = argparse.ArgumentParser(description="Run my job")
+    parser.add_argument("--start", help="Name to start the job with")
+    parser.add_argument("--stop", help="Name to stop the job with")
+    args = parser.parse_args()
 
-# %%
-print_all_status()
-try_stop('james-a100')
-print_all_status()
-# %%
-create_instances()
-print_all_status()
-try_stop('james-a100')
-try_stop('mark-a100')
-try_stop('lena-a100')
-try_stop('jaime-a100')
-# %%
+    print_all_status()
+    if args.start:
+        try_start(args.start)
+    if args.stop:
+        try_stop(args.stop)
+
+if __name__ == "__main__":
+    main()
