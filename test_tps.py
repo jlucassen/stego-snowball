@@ -2,7 +2,10 @@
 import transformers
 import torch
 from time import perf_counter
+import dotenv
+import os
 
+dotenv.load_dotenv()
 # %%
 model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
 
@@ -11,7 +14,7 @@ pipeline = transformers.pipeline(
     model=model_id,
     model_kwargs={"torch_dtype": torch.bfloat16},
     device_map="auto",
-    token="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"
+    token=os.getenv('HF_TOKEN')
 )
 
 messages = [
