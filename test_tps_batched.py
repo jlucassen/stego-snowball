@@ -6,7 +6,7 @@ import os
 
 dotenv.load_dotenv()
 
-model_id = "meta-llama/Meta-Llama-3-70B-Instruct"
+model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
 
 pipeline = transformers.pipeline(
     "text-generation",
@@ -26,11 +26,12 @@ terminators = [
     pipeline.tokenizer.convert_tokens_to_ids("<|eot_id|>")
 ]
 
-token_total = 0
-t1_start = perf_counter() 
-for _ in range(10):
+def create_batch(messages, batch_size):
+    return [messages for _ in range(batch_size)]
+
+def process_batch(batch):
     outputs = pipeline(
-        messages,
+        batch,
         max_new_tokens=256,
         eos_token_id=terminators,
         do_sample=True,
@@ -38,6 +39,20 @@ for _ in range(10):
         top_p=0.9,
         pad_token_id=pipeline.tokenizer.eos_token_id
     )
-    token_total += len(outputs[0]["generated_text"][-1]['content'])
+    return outputs
+
+batch_size = 8  # Adjust this based on your GPU memory
+num_batches = 1  # Total iterations will be batch_size * num_batches
+
+token_total = 0
+t1_start = perf_counter()
+
+for _ in range(num_batches):
+    batch = create_batch(messages, batch_size)
+    outputs = process_batch(batch)
+    for output in outputs:
+        token_total += len(output[0]["generated_text"][2]['content'])
+        print(output[0]["generated_text"][1]['content'])
+
 t1_stop = perf_counter()
 print(f"Got {token_total} tokens in {t1_stop-t1_start} seconds, {token_total/(t1_stop-t1_start)} tokens per second.")
