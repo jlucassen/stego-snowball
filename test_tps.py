@@ -28,7 +28,7 @@ terminators = [
 
 token_total = 0
 t1_start = perf_counter() 
-for _ in range(10):
+for _ in range(25):
     outputs = pipeline(
         messages,
         max_new_tokens=256,

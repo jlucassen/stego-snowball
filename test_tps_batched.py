@@ -6,7 +6,7 @@ import os
 
 dotenv.load_dotenv()
 
-model_id = "meta-llama/Meta-Llama-3-8B-Instruct"
+model_id = "meta-llama/Meta-Llama-3-70B-Instruct"
 
 pipeline = transformers.pipeline(
     "text-generation",
@@ -41,18 +41,17 @@ def process_batch(batch):
     )
     return outputs
 
-batch_size = 8  # Adjust this based on your GPU memory
-num_batches = 1  # Total iterations will be batch_size * num_batches
+for batch_size in [1, 2, 4, 8]:
+    num_batches = 10  # Total iterations will be batch_size * num_batches
 
-token_total = 0
-t1_start = perf_counter()
+    token_total = 0
+    t1_start = perf_counter()
 
-for _ in range(num_batches):
-    batch = create_batch(messages, batch_size)
-    outputs = process_batch(batch)
-    for output in outputs:
-        token_total += len(output[0]["generated_text"][2]['content'])
-        print(output[0]["generated_text"][1]['content'])
+    for _ in range(num_batches):
+        batch = create_batch(messages, batch_size)
+        outputs = process_batch(batch)
+        for output in outputs:
+            token_total += len(output[0]["generated_text"][2]['content'])
 
-t1_stop = perf_counter()
-print(f"Got {token_total} tokens in {t1_stop-t1_start} seconds, {token_total/(t1_stop-t1_start)} tokens per second.")
+    t1_stop = perf_counter()
+    print(f"Batch size {batch_size}, got {token_total} tokens in {t1_stop-t1_start} seconds, {token_total/(t1_stop-t1_start)} tokens per second.")
